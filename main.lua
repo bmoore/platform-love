@@ -1,4 +1,4 @@
-local loader = require("Advanced-Tiled-Loader/Loader")
+local loader = require "Advanced-Tiled-Loader/Loader"
 loader.path = "maps/"
 
 local HC = require "HardonCollider"
@@ -11,7 +11,7 @@ function love.load()
     print("Started")
     map = loader.load("level.tmx")
 
-    collider = HC(100, on_collide, collision_stop)
+    collider = HC(64, on_collide, collision_stop)
 
     allSolidTiles = findSolidTiles(map)
 
@@ -24,9 +24,11 @@ function love.draw()
 end
 
 function love.update(dt)
-    updateHero(dt)
+    hero.bound_left = false
+    hero.bound_right = false
 
     collider:update(dt)
+    updateHero(dt)
 end
 
 function love.focus(f)
@@ -35,6 +37,12 @@ end
 function love.keypressed(key, unicode)
     if key == "up" then
         heroJump()
+    end
+
+    if key == " " then
+        for k,v in pairs(hero) do
+            print(k, ":", v)
+        end
     end
 end
 
@@ -72,18 +80,20 @@ function setupHero(x, y)
     hero = collider:addRectangle(x,y,16,16)
     hero.vx = 200
     hero.vy = 1
-    hero.gravity = 300
+    hero.gravity = 512
+    hero.bound_left = false
+    hero.bound_right = false
 end
 
 function updateHero(dt)
     local dx = 0
     local dy = 0
 
-    if love.keyboard.isDown("left") then
+    if love.keyboard.isDown("left") and hero.bound_left == false then
         dx = -hero.vx*dt
     end
 
-    if love.keyboard.isDown("right") then
+    if love.keyboard.isDown("right") and hero.bound_right == false then
         dx = hero.vx*dt
     end
 
@@ -97,8 +107,19 @@ end
 
 function heroJump()
     if hero.vy == 0 then
-        hero.vy = -200
+        hero.vy = -300
     end
+
+    if hero.bound_left then
+        hero.vy = -200
+        hero.vx = 100
+    end
+
+    if hero.bound_right then
+        hero.vy = -200
+        hero.vx = -100
+    end
+
 end
 
 function on_collide(dt, shape_a, shape_b, dx, dy)
@@ -108,27 +129,57 @@ function on_collide(dt, shape_a, shape_b, dx, dy)
 end
 
 function collideHeroWithTile(dt, shape_a, shape_b, dx, dy)
-    local hero_shape, tileshape
+
+    -- collision hero entites with level geometry
     if shape_a == hero and shape_b.type == "tile" then
-        hero_shape = shape_a
+        shape_a:move(dx, dy)
+        ax, ay = shape_a:center()
+        bx, by = shape_b:center()
+        diff_x = ax - bx;
+        diff_y = ay - by;
+
+        print("diff y:", diff_y)
+
+        if math.abs(dy) > math.abs(dx) then
+            if dy < 0 then
+                hero.vy = 0
+            else
+                hero.vy = 1
+            end
+        end
+
+        if hero.vy ~= 0 or math.abs(diff_y) <= 0.0001 then
+            if diff_x > 0 then
+                hero.bound_left = true
+            elseif diff_x < 0 then
+                hero.bound_right = true
+            end
+        end
     elseif shape_b == hero and shape_a.type == "tile" then
-        hero_shape = shape_b
+        shape_b:move(-dx, -dy)
+        ax, ay = shape_a:center()
+        bx, by = shape_b:center()
+        diff_x = bx - ax;
+        diff_y = by - ay;
+        print("diff y:", diff_y)
+
+        if math.abs(dy) > math.abs(dx) then
+            if dy > 0 then
+                hero.vy = 0
+            else
+                hero.vy = 1
+            end
+        end
+
+        if hero.vy ~= 0 or math.abs(diff_y) <= 0.0001 then
+            if diff_x > 0 then
+                hero.bound_left = true
+            elseif diff_x < 0 then
+                hero.bound_right = true
+            end
+        end
     else
         return
-    end
-
-    print("dx: ", dx)
-    print("dy: ", dy)
-
-    hero_shape:move(dx, dy)
-    if math.abs(dy) > math.abs(dx) then
-        if dy < 0 then
-            -- set velocity to 0
-            hero.vy = 0
-        else
-            -- set velocity to -1
-            hero.vy = 1
-        end
     end
 end
 
