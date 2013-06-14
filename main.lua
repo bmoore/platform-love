@@ -69,6 +69,9 @@ function findSolidTiles(map)
             ctile.type = "tile"
             collider:addToGroup("tiles", ctile)
             collider:setPassive(ctile)
+            if tile.properties.hurty then
+                ctile.hurty = true
+            end
             table.insert(collidable_tiles, ctile)
         end
     end
@@ -119,6 +122,10 @@ function collideHeroWithTile(dt, shape_a, shape_b, dx, dy)
 
     -- collision hero entites with level geometry
     if shape_a == hero and shape_b.type == "tile" then
+        if shape_b.hurty then
+            print("ouchy!")
+            dy = dy - 20
+        end
         shape_a:move(dx, dy)
         ax, ay = shape_a:center()
         bx, by = shape_b:center()
@@ -141,6 +148,10 @@ function collideHeroWithTile(dt, shape_a, shape_b, dx, dy)
             end
         end
     elseif shape_b == hero and shape_a.type == "tile" then
+        if shape_a.hurty then
+            print("youch!")
+            dy = dy + 20
+        end
         shape_b:move(-dx, -dy)
         ax, ay = shape_a:center()
         bx, by = shape_b:center()

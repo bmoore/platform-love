@@ -24,6 +24,7 @@
   </tile>
   <tile id="4">
    <properties>
+    <property name="hurty" value="true"/>
     <property name="solid" value="true"/>
    </properties>
   </tile>
