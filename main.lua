@@ -90,11 +90,9 @@ function updateHero(dt)
     local dy = 0
 
     if love.keyboard.isDown("left") and hero.bound_left == false then
-        dx = -hero.vx*dt
-    end
-
-    if love.keyboard.isDown("right") and hero.bound_right == false then
-        dx = hero.vx*dt
+        dx = dx - hero.vx*dt
+    elseif love.keyboard.isDown("right") and hero.bound_right == false then
+        dx = dx + hero.vx*dt
     end
 
     if hero.vy ~= 0 then
@@ -109,17 +107,6 @@ function heroJump()
     if hero.vy == 0 then
         hero.vy = -300
     end
-
-    if hero.bound_left then
-        hero.vy = -200
-        hero.vx = 100
-    end
-
-    if hero.bound_right then
-        hero.vy = -200
-        hero.vx = -100
-    end
-
 end
 
 function on_collide(dt, shape_a, shape_b, dx, dy)
@@ -138,8 +125,6 @@ function collideHeroWithTile(dt, shape_a, shape_b, dx, dy)
         diff_x = ax - bx;
         diff_y = ay - by;
 
-        print("diff y:", diff_y)
-
         if math.abs(dy) > math.abs(dx) then
             if dy < 0 then
                 hero.vy = 0
@@ -148,7 +133,7 @@ function collideHeroWithTile(dt, shape_a, shape_b, dx, dy)
             end
         end
 
-        if hero.vy ~= 0 or math.abs(diff_y) <= 0.0001 then
+        if hero.vy ~= 0 or math.abs(diff_y) <= 0 then
             if diff_x > 0 then
                 hero.bound_left = true
             elseif diff_x < 0 then
@@ -161,8 +146,6 @@ function collideHeroWithTile(dt, shape_a, shape_b, dx, dy)
         bx, by = shape_b:center()
         diff_x = bx - ax;
         diff_y = by - ay;
-        print("diff y:", diff_y)
-
         if math.abs(dy) > math.abs(dx) then
             if dy > 0 then
                 hero.vy = 0
